@@ -56,6 +56,7 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
 
     public MapFragment() {
         // Required empty public constructor
+        alist = new ArrayList<>();
     }
 
     /**
