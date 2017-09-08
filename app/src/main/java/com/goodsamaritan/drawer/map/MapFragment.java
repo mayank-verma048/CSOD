@@ -1,16 +1,35 @@
 package com.goodsamaritan.drawer.map;
 
 import android.content.Context;
+import android.graphics.Color;
+import android.location.Location;
 import android.net.Uri;
 import android.os.Bundle;
 import android.app.Fragment;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import com.goodsamaritan.LocationService;
+import com.goodsamaritan.PostDetails;
 import com.goodsamaritan.R;
+import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
+import com.google.android.gms.maps.model.BitmapDescriptor;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
+import com.google.android.gms.maps.model.CircleOptions;
+import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
+
+import java.util.ArrayList;
+import java.util.Random;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -33,6 +52,7 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
     private GoogleMap mMap;
 
     private OnFragmentInteractionListener mListener;
+    private ArrayList<AreaList> alist;
 
     public MapFragment() {
         // Required empty public constructor
@@ -108,9 +128,107 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
         mListener = null;
     }
 
+    String wordToDisplay;
+
+    String wordList[] = new String[3];
+    Random r = new Random();
+
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
+        wordList[0]="ROBBERY";
+        wordList[1]="EVE TEASING";
+        wordList[2]="ASSAULT";
+        int rnd = new Random().nextInt(wordList.length);
+        wordToDisplay = wordList[rnd];
+
+
+        // Add a marker in your location and move the camera
+        LatLng bangalore = new LatLng(LocationService.getUserLocation().getLatitude(),LocationService.getUserLocation().getLongitude());
+        mMap.addMarker(new MarkerOptions().position(bangalore).title("Crime Reported:" + wordToDisplay));
+        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(bangalore,(float)12.0));
+        final String real = "R.drawable.shooting";
+////
+        DatabaseReference ref = FirebaseDatabase.getInstance().getReference().getRoot().child("Posts");
+        ref.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                for(DataSnapshot d:dataSnapshot.getChildren()){
+                    PostDetails det =d.getValue(PostDetails.class);
+                    Log.d("POST_DETAILS",det.getLocation().getLatitude()+" "+det.getLocation().getLongitude()+"\n");
+                    Log.d("POST_DETAILS",d.getKey());
+                    BitmapDescriptor icon = BitmapDescriptorFactory.fromResource(R.drawable.shooting);
+                    mMap.addMarker(new MarkerOptions().position(new LatLng(Double.parseDouble(det.getLocation().getLatitude()),Double.parseDouble(det.getLocation().getLongitude()))).title("Crime Reported:" + wordList[r.nextInt(3)]).icon(icon));
+
+                    //Diagnose how classifier works
+                    Location l = new Location("gps");
+                    l.setLatitude(Double.parseDouble(det.getLocation().getLatitude()));
+                    l.setLongitude(Double.parseDouble(det.getLocation().getLongitude()));
+                    classifyLocation(l);
+
+
+                }
+                printclassifier();
+                markArea();
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
+    }
+
+    //This algorithm has not been tested for robustness. Please check for potential problems.
+    public void classifyLocation(Location l){
+        for(AreaList area:alist){
+            for(Location location:area.getMembers()){
+                //Don't add location to this area if distance is greater than 500m.
+                if(l.distanceTo(location)>500)continue;
+                //Add location to this area and return
+                area.getMembers().add(l);
+                return;
+            }
+        }
+        //At this point this location couldn't be classified in existing areas, so add new area and add location to this area.
+        AreaList e = new AreaList();
+        e.getMembers().add(l);
+        alist.add(e);
+    }
+
+    public void printclassifier(){
+        int i=0;
+        for(AreaList area:alist){
+            Log.d("CLASSIFIER","Area "+(++i));
+            for(Location location:area.getMembers()){
+                Log.d("CLASSIFIER","Location:"+location.getLatitude()+","+location.getLongitude());
+            }
+        }
+    }
+
+    public void markArea(){
+        for(AreaList area:alist){
+            float lat=0,lo=0;
+            int n=0;
+            for(Location location:area.getMembers()){
+                lat+=location.getLatitude();
+                lo+=location.getLongitude();
+                n++;
+            }
+
+            if(n<5)continue;
+            LatLng l = new LatLng(lat/n,lo/n);
+
+            CircleOptions circleOptions = new CircleOptions()
+                    .center(l)   //set center
+                    .radius(500)   //set radius in meters
+                    .fillColor(0x40ff0000)  //default
+                    .strokeColor(Color.BLUE)
+                    .strokeWidth(5);
+            mMap.addCircle(circleOptions);
+        }
+
+
     }
 
     /**
