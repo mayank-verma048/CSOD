@@ -38,6 +38,7 @@ import com.google.firebase.storage.UploadTask;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.OutputStream;
 import java.text.DateFormat;
 import java.util.Date;
 
@@ -180,22 +181,22 @@ public class ReportActivity extends AppCompatActivity {
                 DatabaseReference fRef= ref.getReference().getRoot().child("Posts").push();
                 fRef.setValue(details);
 
-/*                sRef.child("images/"+fRef.getKey()+"/picture.jpg").putFile(mImageUri).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+                sRef.child("images/"+fRef.getKey()+"/picture.jpg").putFile(mImageUri).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
                        @Override
                     public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-                        Toast.makeText(getActivity(),"Image Uploaded",Toast.LENGTH_LONG).show();
+                        Toast.makeText(ReportActivity.this,"Image Uploaded",Toast.LENGTH_LONG).show();
 
                     }
                 }).addOnFailureListener(new OnFailureListener() {
                     @Override
                     public void onFailure(@NonNull Exception e) {
-                        Toast.makeText(getActivity(),"Image reloaded",Toast.LENGTH_LONG).show();
+                        Toast.makeText(ReportActivity.this,"Error while uploading Image",Toast.LENGTH_LONG).show();
                     }
-                });*/
+                });
                 final ProgressDialog pd = new ProgressDialog(ReportActivity.this);
                 pd.setMessage("UPLOADING");
                 Toast.makeText(ReportActivity.this, "Report Submitted", Toast.LENGTH_SHORT).show();
-                /*pd.show();
+                pd.show();
                 sRef.child("images/"+fRef.getKey()+"/picture.jpg").putFile(Uri.fromFile(thumb)).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
                     @Override
                     public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
@@ -206,9 +207,9 @@ public class ReportActivity extends AppCompatActivity {
                 }).addOnFailureListener(new OnFailureListener() {
                     @Override
                     public void onFailure(@NonNull Exception e) {
-                        Toast.makeText(ReportActivity.this,"Image reloaded",Toast.LENGTH_LONG).show();
+                        Toast.makeText(ReportActivity.this,"Error uploading Image",Toast.LENGTH_LONG).show();
                     }
-                });*/
+                });
             }
         });
     }
@@ -315,6 +316,20 @@ public class ReportActivity extends AppCompatActivity {
         bp.compress(android.graphics.Bitmap.CompressFormat.PNG,100,out);
 */
         mImageView.setImageBitmap(bp);
+
+        final File f3 = new File(Environment.getExternalStorageDirectory() + "/twitter_upload/");
+        final File file = new File(Environment.getExternalStorageDirectory() + "/twitter_upload/" + "temp" + ".png");
+        if (!f3.exists())
+            f3.mkdirs();
+        OutputStream outStream;
+        try {
+            outStream = new FileOutputStream(file);
+            bp.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, outStream);
+            outStream.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
     }
 
 
