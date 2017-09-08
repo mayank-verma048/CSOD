@@ -38,6 +38,7 @@ import com.google.firebase.storage.UploadTask;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.OutputStream;
 import java.text.DateFormat;
 import java.util.Date;
@@ -71,6 +72,10 @@ public class ReportActivity extends AppCompatActivity {
     private StorageReference sRef;
     private FirebaseAuth fAuth;
 
+    //Variables for image file
+    private File file;
+    private boolean fSaved=false;
+
     private MapFragment.OnFragmentInteractionListener mListener;
 
     @Override
@@ -87,7 +92,7 @@ public class ReportActivity extends AppCompatActivity {
         FirebaseApp.initializeApp(ReportActivity.this);
         fAuth= FirebaseAuth.getInstance();
         if(fAuth.getCurrentUser()==null)signInAnonymously();
-//        sRef = FirebaseStorage.getInstance().getReference();
+        sRef = FirebaseStorage.getInstance().getReference();
 
 
     }
@@ -156,13 +161,9 @@ public class ReportActivity extends AppCompatActivity {
                 }
                 catch(Exception e)
                 {
-//                    Log.v("TEMPFILE", "Can't create file to take picture!");
-//                    e.printStackTrace();
-//                    Toast.makeText(getActivity(), "Please check SD card! Image shot is impossible!", Toast.LENGTH_LONG);
-//
+
                 }
-//                mImageUri = Uri.fromFile(photo);
-//                intent.putExtra(MediaStore.EXTRA_OUTPUT, mImageUri);
+
                 startActivityForResult(intent,0);
             }
         });
@@ -181,7 +182,7 @@ public class ReportActivity extends AppCompatActivity {
                 DatabaseReference fRef= ref.getReference().getRoot().child("Posts").push();
                 fRef.setValue(details);
 
-                sRef.child("images/"+fRef.getKey()+"/picture.jpg").putFile(mImageUri).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+                /*sRef.child("images/"+fRef.getKey()+"/picture.jpg").putFile(Uri.fromFile(thumb)).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
                        @Override
                     public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
                         Toast.makeText(ReportActivity.this,"Image Uploaded",Toast.LENGTH_LONG).show();
@@ -192,24 +193,27 @@ public class ReportActivity extends AppCompatActivity {
                     public void onFailure(@NonNull Exception e) {
                         Toast.makeText(ReportActivity.this,"Error while uploading Image",Toast.LENGTH_LONG).show();
                     }
-                });
+                });*/
                 final ProgressDialog pd = new ProgressDialog(ReportActivity.this);
                 pd.setMessage("UPLOADING");
                 Toast.makeText(ReportActivity.this, "Report Submitted", Toast.LENGTH_SHORT).show();
-                pd.show();
-                sRef.child("images/"+fRef.getKey()+"/picture.jpg").putFile(Uri.fromFile(thumb)).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
-                    @Override
-                    public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-                        pd.dismiss();
-                        Toast.makeText(ReportActivity.this,"Image Uploaded",Toast.LENGTH_LONG).show();
+                if(fSaved){
+                    pd.show();
+                    sRef.child("images/"+fRef.getKey()+"/picture.jpg").putFile(Uri.fromFile(file)).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+                        @Override
+                        public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                            pd.dismiss();
+                            Toast.makeText(ReportActivity.this,"Image Uploaded",Toast.LENGTH_LONG).show();
 
-                    }
-                }).addOnFailureListener(new OnFailureListener() {
-                    @Override
-                    public void onFailure(@NonNull Exception e) {
-                        Toast.makeText(ReportActivity.this,"Error uploading Image",Toast.LENGTH_LONG).show();
-                    }
-                });
+                        }
+                    }).addOnFailureListener(new OnFailureListener() {
+                        @Override
+                        public void onFailure(@NonNull Exception e) {
+                            Toast.makeText(ReportActivity.this,"Error uploading Image",Toast.LENGTH_LONG).show();
+                        }
+                    });
+                }
+
             }
         });
     }
@@ -304,6 +308,8 @@ public class ReportActivity extends AppCompatActivity {
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
+        fSaved = false;
+
         android.graphics.Bitmap bp = (Bitmap) data.getExtras().get("data");
 //        grabImage(mImageView);
 /*        FileOutputStream out = null;
@@ -317,15 +323,23 @@ public class ReportActivity extends AppCompatActivity {
 */
         mImageView.setImageBitmap(bp);
 
-        final File f3 = new File(Environment.getExternalStorageDirectory() + "/twitter_upload/");
-        final File file = new File(Environment.getExternalStorageDirectory() + "/twitter_upload/" + "temp" + ".png");
+        //Image compression code.
+        final File f3 = new File(Environment.getExternalStorageDirectory().getAbsolutePath()+"/gs_upload/");
+        file = new File(Environment.getExternalStorageDirectory().getAbsolutePath()+"/gs_upload/"+"temp"+".png");
+
         if (!f3.exists())
-            f3.mkdirs();
+            Log.d("FILE_CREATED",Boolean.toString(f3.mkdir()));
         OutputStream outStream;
+        try {
+            Log.d("FILE_CREATED",Boolean.toString(file.createNewFile()));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         try {
             outStream = new FileOutputStream(file);
             bp.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, outStream);
             outStream.close();
+            fSaved=true;
         } catch (Exception e) {
             e.printStackTrace();
         }
