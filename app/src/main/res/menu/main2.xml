@@ -7,9 +7,13 @@
         android:title="@string/action_settings"
         app:showAsAction="never" />
     <item
+        android:id="@+id/action_report_add"
+        android:title="Report"
+        android:icon="@drawable/ic_iconfinder_icon"
+        app:showAsAction="ifRoom" />
+    <item
         android:id="@+id/action_person_add"
         android:title="Add"
         android:icon="@drawable/ic_person_add_white"
         app:showAsAction="ifRoom" />
-
 </menu>

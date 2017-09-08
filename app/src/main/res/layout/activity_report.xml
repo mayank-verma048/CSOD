@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+    <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+                xmlns:tools="http://schemas.android.com/tools"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                tools:context="com.goodsamaritan.ReportActivity">
+
+        <!-- TODO: Update blank fragment layout -->
+        <LinearLayout
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent"
+            android:orientation="vertical">
+
+            <!--Put form controls here-->
+
+            <EditText
+                android:id="@+id/subject"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Subject of the of the Crime"
+                android:textSize="10pt">
+            </EditText>
+
+            <EditText
+                android:id="@+id/description"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Description of the of the Crime"
+                android:textSize="10pt">
+            </EditText>
+
+            <Button
+                android:id="@+id/ButtonCamera"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:onClick="sendFeedback"
+                android:text="Camera"
+                android:backgroundTint="@android:color/background_dark"
+                android:textColor="@android:color/white"/>
+
+            <ImageView
+                android:id="@+id/imageview"
+                android:layout_width="320dp"
+                android:layout_height="220dp"
+                android:layout_marginBottom="42dp"
+                android:layout_marginLeft="25dp"
+                android:layout_marginRight="25dp"
+                android:layout_marginTop="25dp"
+                />
+            <LinearLayout
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content">
+                <Button
+                    android:id="@+id/ButtonLocation"
+                    android:layout_width="fill_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Location"
+                    android:bottomRightRadius="10dp"
+                    android:bottomLeftRadius="100dp"
+                    android:layout_weight="1"
+                    android:backgroundTint="@android:color/background_dark"
+                    android:textColor="@android:color/white"/>
+                <Button
+                    android:layout_width="fill_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Time"
+                    android:layout_weight="1"
+                    android:layout_toRightOf="@+id/ButtonLocation"
+                    android:backgroundTint="@android:color/background_dark"
+                    android:textColor="@android:color/white"
+                    android:id="@+id/ButtonTime"/>
+
+            </LinearLayout>
+
+
+            <Spinner
+                android:id="@+id/static_spinner"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="20dp"
+                android:layout_marginTop="20dp"
+                android:entries="@array/Department_name"/>
+
+            <TextView
+                android:id="@+id/time"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:hint="Time"
+                android:textSize="10pt">
+            </TextView>
+
+            <Button
+                android:id="@+id/postButton"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Post"
+                android:backgroundTint="@android:color/holo_red_dark"/>
+
+        </LinearLayout>
+
+    </ScrollView>

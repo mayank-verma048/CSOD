@@ -335,6 +335,9 @@ public class MainScreenActivity extends AppCompatActivity
             return true;
         } else if(id == R.id.action_person_add){
             doLaunchContactPicker();
+        }else if(id == R.id.action_report_add){
+            Intent intent = new Intent(MainScreenActivity.this,ReportActivity.class);
+            startActivity(intent);
         }
 
         return super.onOptionsItemSelected(item);
