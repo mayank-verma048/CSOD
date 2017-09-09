@@ -72,6 +72,7 @@ public class ReportActivity extends AppCompatActivity {
     private Button postButton;
     private TextView subjectText;
     private TextView descText;
+    public TextView tag;
     Button location;
     Button timeButton;
 
@@ -121,28 +122,29 @@ public class ReportActivity extends AppCompatActivity {
         //Request Permissions (for Marshmallow onwards)
         requestPermissions();
 
-        final TextView time  = (TextView) findViewById(R.id.time);
+//      final TextView time  = (TextView) findViewById(R.id.time);
         ref = FirebaseDatabase.getInstance();
         subjectText = (EditText) findViewById(R.id.subject);
         descText = (EditText) findViewById(R.id.description);
+        tag = (TextView) findViewById(R.id.time);
         postButton = (Button) findViewById(R.id.postButton);
-        location = (Button) findViewById(R.id.ButtonLocation);
-        timeButton = (Button) findViewById(R.id.ButtonTime);
+        //location = (Button) findViewById(R.id.ButtonLocation);
+        //timeButton = (Button) findViewById(R.id.ButtonTime);
 
-        timeButton.setOnClickListener(new View.OnClickListener() {
+/*        timeButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 String currentDateTimeString = DateFormat.getDateTimeInstance().format(new Date());
                 time.setText(currentDateTimeString);
             }
-        });
+        });*/
 
-        location.setOnClickListener(new View.OnClickListener() {
+/*        location.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 Toast.makeText(ReportActivity.this,"Location Send",Toast.LENGTH_SHORT).show();
             }
-        });
+        });*/
 
 
         /** time.setOnClickListener(new View.OnClickListener() {
@@ -339,6 +341,7 @@ public class ReportActivity extends AppCompatActivity {
 
         bp.compress(android.graphics.Bitmap.CompressFormat.PNG,100,out);
 */
+        mImageView.setScaleType(ImageView.ScaleType.FIT_XY);
         mImageView.setImageBitmap(bp);
 
         //Image compression code.
@@ -380,11 +383,15 @@ public class ReportActivity extends AppCompatActivity {
                 AnalysisResult result = new Gson().fromJson(s, AnalysisResult.class);
                 Log.d("VISION",(result==null)?"null":"not null");
                 descText = (EditText) findViewById(R.id.description);
+                tag = (TextView) findViewById(R.id.time);
                 StringBuilder stringbuilder = new StringBuilder();
                 for(Caption caption:result.description.captions){
                     stringbuilder.append(caption .text);
                 }
-                descText.setText(stringbuilder);
+                tag.setText(stringbuilder);
+                String currentDateTimeString = DateFormat.getDateTimeInstance().format(new Date());
+                tag.append(" " + "Time: " + currentDateTimeString);
+
             }
 
 
@@ -411,9 +418,6 @@ public class ReportActivity extends AppCompatActivity {
         }
 
     }
-
-
-
 
     // TODO: Rename method, update argument and hook method into UI event
  /*   public void onButtonPressed(Uri uri) {

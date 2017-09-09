@@ -37,7 +37,9 @@
                 android:onClick="sendFeedback"
                 android:text="Camera"
                 android:backgroundTint="@android:color/background_dark"
-                android:textColor="@android:color/white"/>
+                android:textColor="@android:color/white"
+                android:layout_marginRight="10dp"
+                android:layout_marginLeft="10dp"/>
 
             <ImageView
                 android:id="@+id/imageview"
@@ -47,11 +49,10 @@
                 android:layout_marginLeft="25dp"
                 android:layout_marginRight="25dp"
                 android:layout_marginTop="25dp"
+                android:scaleType="fitCenter"
+                android:adjustViewBounds="true"
                 />
-            <LinearLayout
-                android:layout_width="fill_parent"
-                android:layout_height="wrap_content">
-                <Button
+  <!--              <Button
                     android:id="@+id/ButtonLocation"
                     android:layout_width="fill_parent"
                     android:layout_height="wrap_content"
@@ -69,10 +70,13 @@
                     android:layout_toRightOf="@+id/ButtonLocation"
                     android:backgroundTint="@android:color/background_dark"
                     android:textColor="@android:color/white"
-                    android:id="@+id/ButtonTime"/>
-
-            </LinearLayout>
-
+                    android:id="@+id/ButtonTime"/>-->
+                <TextView
+                    android:id="@+id/time"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:hint="Tag: "
+                    android:textSize="10pt"/>
 
             <Spinner
                 android:id="@+id/static_spinner"
@@ -82,20 +86,16 @@
                 android:layout_marginTop="20dp"
                 android:entries="@array/Department_name"/>
 
-            <TextView
-                android:id="@+id/time"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:hint="Time"
-                android:textSize="10pt">
-            </TextView>
-
             <Button
                 android:id="@+id/postButton"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="Post"
-                android:backgroundTint="@android:color/holo_red_dark"/>
+                android:background="@drawable/roundedbuttons"
+                android:backgroundTint="@android:color/holo_red_dark"
+                android:layout_marginLeft="10dp"
+                android:layout_marginRight="10dp"
+                android:layout_marginBottom="5dp"/>
 
         </LinearLayout>
 
