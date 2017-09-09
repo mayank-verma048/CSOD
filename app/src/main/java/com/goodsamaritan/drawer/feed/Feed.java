@@ -6,6 +6,7 @@ import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
 import android.app.Fragment;
+import android.os.Environment;
 import android.support.annotation.NonNull;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -28,6 +29,8 @@ import com.google.firebase.storage.FirebaseStorage;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 
 /**
@@ -61,7 +64,7 @@ public class Feed extends Fragment {
 
     private File local;
     List<Bitmap> bitmaps;
-
+    private int i;
 
 
     public Feed() {
@@ -130,41 +133,64 @@ public class Feed extends Fragment {
         firebaseStorage = FirebaseStorage.getInstance();
         firebaseDatabase = FirebaseDatabase.getInstance();
         bitmaps = new ArrayList<>();
+        rAdapter.setImageViewList(bitmaps);
+        final HashMap<String,Integer> h = new HashMap<>();
+
+
 
 
         firebaseDatabase.getReference().getRoot().child("Posts").addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
+                i=0;
+                final File f3 = new File(Environment.getExternalStorageDirectory().getAbsolutePath()+"/gs_upload_temp/");
+                f3.mkdir();
+                for(long j=0;j<dataSnapshot.getChildrenCount();j++){
+                    postDetailsList.add(null);
+                    bitmaps.add(null);
+                }
+                for(final DataSnapshot d:dataSnapshot.getChildren()){
 
-                for(DataSnapshot d:dataSnapshot.getChildren()){
-                    //Log.d("CDATABASE",d.getKey()+"\n"+d.getValue());
                     PostDetails p = d.getValue(PostDetails.class);
-                    postDetailsList.add(p);
+                    postDetailsList.set(i,p);
                     try {
-                        local = File.createTempFile("thumb",".jpg");
+                        //local = File.createTempFile("temp"+Integer.toString(i),".jpg");
+                        local = new File(Environment.getExternalStorageDirectory().getAbsolutePath()+"/gs_upload_temp/"+Integer.toString(i)+".png");
+                        if(!local.createNewFile())Log.d("FILE","Not working.");
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
                     //local.delete();
+                    Log.d("FILE",local.getPath()+" "+i);
+                    h.put(local.getPath(),i);
                     Log.d("PATH",firebaseStorage.getReference().getRoot().child("images/"+d.getKey()+"/picture.jpg").getPath());
                     firebaseStorage.getReference().getRoot().child("images/"+d.getKey()+"/picture.jpg").getFile(local).addOnSuccessListener(new OnSuccessListener<FileDownloadTask.TaskSnapshot>() {
                         @Override
                         public void onSuccess(FileDownloadTask.TaskSnapshot taskSnapshot) {
-                            Bitmap img = BitmapFactory.decodeFile(local.getPath());
+                            /*Bitmap img = BitmapFactory.decodeFile(local.getPath());
+
 
                             if(img==null)Log.d("IMAGE","It's not there."+local.length()+local.exists());
-                            bitmaps.add(img);
-                            rAdapter.notifyDataSetChanged();
-                            Log.d("IMAGE","Hello\nHello\nHello\nThe list size is:"+bitmaps.size());
+                            bitmaps.set(h.get(local.getPath()),img);
+                            rAdapter.notifyDataSetChanged();*/
+                            Log.d("IMAGE","The list size is:"+bitmaps.size()+" i is:"+h.get(local.getPath())+" "+local.getPath());
+                            //local.delete();
 
                         }
                     }).addOnFailureListener(new OnFailureListener() {
                         @Override
                         public void onFailure(@NonNull Exception e) {
                             Log.d("IMAGE_DOWNLOAD","fail");
-                            Log.d("IMAGE","Hello\nHello\nHello\nThe list size is:"+bitmaps.size());
+                            Log.d("IMAGE","The list size is:"+bitmaps.size()+" i is:"+h.get(local.getPath())+" "+local.getPath());
                         }
                     });
+
+                    i++;
+                }
+                for(int j=0;j<dataSnapshot.getChildrenCount();j++){
+                    File k = new File(Environment.getExternalStorageDirectory().getAbsolutePath()+"/gs_upload_temp/"+Integer.toString(j)+".png");
+                    Bitmap img = BitmapFactory.decodeFile(k.getPath());
+                    bitmaps.set(j,img);
                 }
                 rAdapter.setImageViewList(bitmaps);
                 Log.d("IMAGE","The list size is:"+bitmaps.size());
