@@ -33,6 +33,7 @@ import com.facebook.FacebookSdk;
 import com.facebook.HttpMethod;
 import com.goodsamaritan.drawer.contacts.ContactsFragment;
 import com.goodsamaritan.drawer.contacts.Contacts;
+import com.goodsamaritan.drawer.feed.Feed;
 import com.goodsamaritan.drawer.home.HomeFragment;
 import com.goodsamaritan.drawer.help_and_feedback.HelpAndFeedbackFragment;
 import com.goodsamaritan.drawer.map.MapFragment;
@@ -64,7 +65,7 @@ import java.util.Set;
 import static android.os.SystemClock.uptimeMillis;
 
 public class MainScreenActivity extends AppCompatActivity
-        implements NavigationView.OnNavigationItemSelectedListener,ContactsFragment.OnListFragmentInteractionListener,HomeFragment.OnHomeInteractionListener,HelpAndFeedbackFragment.OnHelpAndFeedbackInteractionListener,SettingsFragment.OnSettingsInteractionListener,ProfileFragment.OnProfileInteractionListener,MapFragment.OnFragmentInteractionListener {
+        implements NavigationView.OnNavigationItemSelectedListener,ContactsFragment.OnListFragmentInteractionListener,HomeFragment.OnHomeInteractionListener,HelpAndFeedbackFragment.OnHelpAndFeedbackInteractionListener,SettingsFragment.OnSettingsInteractionListener,ProfileFragment.OnProfileInteractionListener,MapFragment.OnFragmentInteractionListener,Feed.OnFeedFragmentInteractionListener {
 
     private static final int REQUEST_CONTACT = 101;
     FragmentManager manager;
@@ -432,6 +433,9 @@ public class MainScreenActivity extends AppCompatActivity
         } else if(id == R.id.dr_map){
             MapFragment mapFragment = new MapFragment();
             manager.beginTransaction().replace(R.id.content_main_screen_layout,mapFragment).commit();
+        } else if(id == R.id.nav_feed){
+            Feed feedFragment = new Feed();
+            manager.beginTransaction().replace(R.id.content_main_screen_layout,feedFragment).commit();
         }
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
@@ -465,6 +469,11 @@ public class MainScreenActivity extends AppCompatActivity
 
     @Override
     public void onMapInteraction(Uri uri) {
+
+    }
+
+    @Override
+    public void onFeedFragmentInteraction(Uri uri) {
 
     }
 }

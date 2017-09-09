@@ -1,20 +1,39 @@
 package com.goodsamaritan.drawer.feed;
 
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
-import android.support.v4.app.Fragment;
+import android.app.Fragment;
+import android.support.annotation.NonNull;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import com.goodsamaritan.PostDetails;
 import com.goodsamaritan.R;
-import com.twitter.sdk.android.core.services.params.Geocode;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.storage.FileDownloadTask;
+import com.google.firebase.storage.FirebaseStorage;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * A simple {@link Fragment} subclass.
  * Activities that contain this fragment must implement the
- * {@link Feed.OnFragmentInteractionListener} interface
+ * {@link OnFeedFragmentInteractionListener} interface
  * to handle interaction events.
  * Use the {@link Feed#newInstance} factory method to
  * create an instance of this fragment.
@@ -29,7 +48,21 @@ public class Feed extends Fragment {
     private String mParam1;
     private String mParam2;
 
-    private OnFragmentInteractionListener mListener;
+    private OnFeedFragmentInteractionListener mListener;
+
+    private FirebaseStorage firebaseStorage;
+    private FirebaseDatabase firebaseDatabase;
+
+    private RecyclerView reportListRecyclerView;
+    private FeedFragmentAdapter rAdapter;
+    private RecyclerView.LayoutManager rLayoutManager;
+
+    private List<PostDetails> postDetailsList;
+
+    private File local;
+    List<Bitmap> bitmaps;
+
+
 
     public Feed() {
         // Required empty public constructor
@@ -61,30 +94,106 @@ public class Feed extends Fragment {
             mParam2 = getArguments().getString(ARG_PARAM2);
         }
 
+        firebaseStorage = FirebaseStorage.getInstance();
+        firebaseDatabase = FirebaseDatabase.getInstance();
+
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_feed, container, false);
+        View view = inflater.inflate(R.layout.fragment_feed, container, false);
+
+        //Add views here using view.findViewByID()
+        reportListRecyclerView = (RecyclerView) view.findViewById(R.id.feed_recycler_view);
+
+        rLayoutManager = new LinearLayoutManager(getActivity().getApplicationContext());
+        reportListRecyclerView.setLayoutManager(rLayoutManager);
+
+
+        postDetailsList = new ArrayList<>();
+        rAdapter = new FeedFragmentAdapter(postDetailsList);
+
+
+
+
+        reportListRecyclerView.setAdapter(rAdapter);
+
+
+        preparePostDetails();
+
+        return view;
+    }
+
+    private void preparePostDetails() {
+        firebaseStorage = FirebaseStorage.getInstance();
+        firebaseDatabase = FirebaseDatabase.getInstance();
+        bitmaps = new ArrayList<>();
+
+
+        firebaseDatabase.getReference().getRoot().child("Posts").addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+
+                for(DataSnapshot d:dataSnapshot.getChildren()){
+                    //Log.d("CDATABASE",d.getKey()+"\n"+d.getValue());
+                    PostDetails p = d.getValue(PostDetails.class);
+                    postDetailsList.add(p);
+                    try {
+                        local = File.createTempFile("thumb",".jpg");
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    //local.delete();
+                    Log.d("PATH",firebaseStorage.getReference().getRoot().child("images/"+d.getKey()+"/picture.jpg").getPath());
+                    firebaseStorage.getReference().getRoot().child("images/"+d.getKey()+"/picture.jpg").getFile(local).addOnSuccessListener(new OnSuccessListener<FileDownloadTask.TaskSnapshot>() {
+                        @Override
+                        public void onSuccess(FileDownloadTask.TaskSnapshot taskSnapshot) {
+                            Bitmap img = BitmapFactory.decodeFile(local.getPath());
+
+                            if(img==null)Log.d("IMAGE","It's not there."+local.length()+local.exists());
+                            bitmaps.add(img);
+                            rAdapter.notifyDataSetChanged();
+                            Log.d("IMAGE","Hello\nHello\nHello\nThe list size is:"+bitmaps.size());
+
+                        }
+                    }).addOnFailureListener(new OnFailureListener() {
+                        @Override
+                        public void onFailure(@NonNull Exception e) {
+                            Log.d("IMAGE_DOWNLOAD","fail");
+                            Log.d("IMAGE","Hello\nHello\nHello\nThe list size is:"+bitmaps.size());
+                        }
+                    });
+                }
+                rAdapter.setImageViewList(bitmaps);
+                Log.d("IMAGE","The list size is:"+bitmaps.size());
+                rAdapter.lStats();
+                rAdapter.notifyDataSetChanged();
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
     }
 
     // TODO: Rename method, update argument and hook method into UI event
     public void onButtonPressed(Uri uri) {
         if (mListener != null) {
-            mListener.onFragmentInteraction(uri);
+            mListener.onFeedFragmentInteraction(uri);
         }
     }
 
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
-        if (context instanceof OnFragmentInteractionListener) {
-            mListener = (OnFragmentInteractionListener) context;
+        if (context instanceof OnFeedFragmentInteractionListener) {
+            mListener = (OnFeedFragmentInteractionListener) context;
         } else {
             throw new RuntimeException(context.toString()
-                    + " must implement OnFragmentInteractionListener");
+                    + " must implement OnFeedFragmentInteractionListener");
         }
     }
 
@@ -104,8 +213,8 @@ public class Feed extends Fragment {
      * "http://developer.android.com/training/basics/fragments/communicating.html"
      * >Communicating with Other Fragments</a> for more information.
      */
-    public interface OnFragmentInteractionListener {
+    public interface OnFeedFragmentInteractionListener {
         // TODO: Update argument type and name
-        void onFragmentInteraction(Uri uri);
+        void onFeedFragmentInteraction(Uri uri);
     }
 }
