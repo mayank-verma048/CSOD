@@ -99,7 +99,9 @@
                 <category android:name="android.intent.category.BROWSABLE"/>
             </intent-filter>
         </activity>
-        <activity android:name=".ReportActivity">
+        <activity
+                  android:name=".ReportActivity"
+                  android:screenOrientation="portrait">
         </activity>
     </application>
 

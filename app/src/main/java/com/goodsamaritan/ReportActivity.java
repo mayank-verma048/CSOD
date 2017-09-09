@@ -7,11 +7,15 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
+import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Environment;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
+import android.support.annotation.StringDef;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.AsyncTaskLoader;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -34,11 +38,20 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
+import com.google.gson.Gson;
+import com.microsoft.projectoxford.vision.VisionServiceClient;
+import com.microsoft.projectoxford.vision.VisionServiceRestClient;
+import com.microsoft.projectoxford.vision.contract.AnalysisResult;
+import com.microsoft.projectoxford.vision.contract.Caption;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.text.DateFormat;
 import java.util.Date;
@@ -78,10 +91,13 @@ public class ReportActivity extends AppCompatActivity {
 
     private MapFragment.OnFragmentInteractionListener mListener;
 
+    public VisionServiceClient visionServiceClient;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_report);
+        visionServiceClient = new VisionServiceRestClient("8c293488a38e4a17a0c1a516d0914778","https://westcentralus.api.cognitive.microsoft.com/vision/v1.0");
 
 /*        if (getArguments() != null) {
             mParam1 = getArguments().getString(ARG_PARAM1);
@@ -118,7 +134,7 @@ public class ReportActivity extends AppCompatActivity {
             public void onClick(View v) {
                 String currentDateTimeString = DateFormat.getDateTimeInstance().format(new Date());
                 time.setText(currentDateTimeString);
-           }
+            }
         });
 
         location.setOnClickListener(new View.OnClickListener() {
@@ -218,7 +234,9 @@ public class ReportActivity extends AppCompatActivity {
         });
     }
 
-    private File createTemporaryFile(String part, String ext) throws Exception
+
+
+        private File createTemporaryFile(String part, String ext) throws Exception
     {
         File tempDir= Environment.getExternalStorageDirectory();
         tempDir=new File(tempDir.getAbsolutePath()+"/.temp/");
@@ -327,6 +345,54 @@ public class ReportActivity extends AppCompatActivity {
         final File f3 = new File(Environment.getExternalStorageDirectory().getAbsolutePath()+"/gs_upload/");
         file = new File(Environment.getExternalStorageDirectory().getAbsolutePath()+"/gs_upload/"+"temp"+".png");
 
+        //Convert Image to ByteStream
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        bp.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, outputStream);
+        ByteArrayInputStream inputStream = new ByteArrayInputStream(outputStream.toByteArray());
+
+        AsyncTask<InputStream,String,String> visionTask = new AsyncTask<InputStream, String, String>() {
+            ProgressDialog progressDialog = new ProgressDialog(ReportActivity.this);
+
+            @Override
+            protected String doInBackground(InputStream... params) {
+                try {
+                    publishProgress("Recognising Image..");
+                    String[] features = {"Description"};
+                    String[] details = {};
+
+                    AnalysisResult result = visionServiceClient.analyzeImage(params[0], features, details);
+                    String strResult = new Gson().toJson(result);
+                    return strResult;
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    return null;
+                }
+            }
+
+            @Override
+            protected void onPreExecute(){
+                progressDialog.show();
+            }
+            @Override
+            protected void onPostExecute(String s){
+                progressDialog.dismiss();
+
+                AnalysisResult result = new Gson().fromJson(s, AnalysisResult.class);
+                Log.d("VISION",(result==null)?"null":"not null");
+                descText = (EditText) findViewById(R.id.description);
+                StringBuilder stringbuilder = new StringBuilder();
+                for(Caption caption:result.description.captions){
+                    stringbuilder.append(caption .text);
+                }
+                descText.setText(stringbuilder);
+            }
+
+
+        };
+
+
+        visionTask.execute(inputStream);
+
         if (!f3.exists())
             Log.d("FILE_CREATED",Boolean.toString(f3.mkdir()));
         OutputStream outStream;
@@ -345,6 +411,8 @@ public class ReportActivity extends AppCompatActivity {
         }
 
     }
+
+
 
 
     // TODO: Rename method, update argument and hook method into UI event
